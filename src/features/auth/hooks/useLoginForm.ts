@@ -1,6 +1,31 @@
 import { useState, FormEvent, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { signIn } from 'next-auth/react';
+
+// 하드코딩된 관리자 계정 정보
+const ADMIN_CREDENTIALS = {
+  id: 'admin',
+  password: 'admin1234',
+  name: '관리자',
+  role: 'admin' as const
+};
+
+// 하드코딩된 테스트 계정
+const TEST_USERS = [
+  {
+    id: 'user1',
+    password: 'user1234',
+    name: '일반사용자',
+    role: 'user' as const
+  },
+  {
+    id: 'subscriber1',
+    password: 'sub1234',
+    name: '구독자',
+    role: 'subscriber' as const
+  }
+];
 
 // Mock API 구현 (실제 서버 API 없이 테스트용)
 const mockApi = {
@@ -9,10 +34,46 @@ const mockApi = {
     
     // /auth/login 엔드포인트 시뮬레이션
     if (url === '/auth/login') {
-      // 간단한 검증 (테스트용)
+      // 하드코딩된 관리자 계정 확인
+      if (data.email === ADMIN_CREDENTIALS.id && data.password === ADMIN_CREDENTIALS.password) {
+        console.log('관리자 계정 로그인 성공');
+        return {
+          data: {
+            success: true,
+            message: '관리자 로그인 성공',
+            token: 'mock-admin-jwt-token-' + Date.now(),
+            refresh_token: 'mock-admin-refresh-token',
+            user_id: ADMIN_CREDENTIALS.id,
+            role: ADMIN_CREDENTIALS.role,
+            name: ADMIN_CREDENTIALS.name
+          }
+        };
+      }
+      
+      // 테스트 사용자 계정 확인
+      const testUser = TEST_USERS.find(user => 
+        user.id === data.email && user.password === data.password
+      );
+      
+      if (testUser) {
+        console.log(`${testUser.role} 계정 로그인 성공`);
+        return {
+          data: {
+            success: true,
+            message: '로그인 성공',
+            token: `mock-${testUser.role}-jwt-token-` + Date.now(),
+            refresh_token: `mock-${testUser.role}-refresh-token`,
+            user_id: testUser.id,
+            role: testUser.role,
+            name: testUser.name
+          }
+        };
+      }
+      
+      // 간단한 검증 (기존 코드 유지 - 이메일 포맷으로 admin 체크)
       if (data.email && data.password) {
         // 특정 이메일을 admin으로 처리 (테스트용)
-        const isAdmin = data.email.includes('admin');
+        const isAdmin = data.email.includes('admin@');
         
         // 성공 응답 시뮬레이션
         return {
@@ -22,7 +83,8 @@ const mockApi = {
             token: 'mock-jwt-token-' + Date.now(),
             refresh_token: 'mock-refresh-token',
             user_id: data.email,
-            role: isAdmin ? 'admin' : 'user' // 관리자 또는 일반 사용자 역할 지정
+            role: isAdmin ? 'admin' : 'user', // 관리자 또는 일반 사용자 역할 지정
+            name: isAdmin ? '관리자' : '사용자'
           }
         };
       } else {
@@ -60,6 +122,11 @@ export const useLoginForm = () => {
     setFormState(prev => ({ ...prev, [name]: value }));
   };
 
+  // 직접 하드코딩된 관리자 계정 체크 함수
+  const checkAdminCredentials = (id: string, password: string) => {
+    return id === ADMIN_CREDENTIALS.id && password === ADMIN_CREDENTIALS.password;
+  };
+
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -75,52 +142,33 @@ export const useLoginForm = () => {
 
     try {
       setFormState(prev => ({ ...prev, isLoading: true, error: '' }));
-
-      // 실제 API 대신 Mock API 사용
-      const response = await mockApi.post('/auth/login', { 
+      
+      // NextAuth의 Credentials Provider로 로그인 시도
+      const result = await signIn('credentials', {
+        redirect: false,
         email: formState.id,
-        password: formState.password
+        password: formState.password,
+        callbackUrl: '/'
       });
-
-      console.log('로그인 응답:', response.data);
       
-      const responseData = response.data as { 
-        success: boolean; 
-        message: string;
-        token?: string;
-        refresh_token?: string;
-        user_id?: string;
-        role?: 'user' | 'subscriber' | 'admin';
-      };
+      console.log('NextAuth 로그인 결과:', result);
       
-      if (responseData.success) {
-        const userId = responseData.user_id || formState.id;
-        const userRole = responseData.role || 'user';
-        
-        // AuthStore로 로그인 처리
-        await signin(userId, {
-          name: '사용자',
-          email: formState.id,
-          role: userRole // 역할 추가
-        }, responseData.token);
-
-        // 성공 메시지 설정
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+      
+      if (result?.ok) {
+        // 로그인 성공 시 상태 업데이트
         setFormState(prev => ({
           ...prev,
           success: '로그인에 성공했습니다.',
           isLoading: false
         }));
-
-        // 역할에 따라 적절한 대시보드로 리다이렉션
-        if (userRole === 'admin') {
-          console.log('관리자로 로그인: 관리자 대시보드로 이동');
-          router.push('/admin/dashboard');
-        } else {
-          console.log('일반 사용자로 로그인: 대시보드로 이동');
-          router.push('/dashboard');
-        }
-      } else {
-        throw new Error(responseData.message || '로그인에 실패했습니다.');
+        
+        // NextAuth가 자동으로 세션을 설정하므로, 추가 처리 없이 홈으로 이동
+        // useAuthRedirect 훅이 역할에 맞는 페이지로 리다이렉션
+        console.log('NextAuth 로그인 성공: 홈으로 이동');
+        router.push('/');
       }
     } catch (error) {
       console.error('로그인 오류:', error);

@@ -16,18 +16,18 @@ const LoginForm = () => {
 
   const handleGoogleSignIn = async () => {
     console.log('구글 로그인 시도...');
-    // 역할 기반 리다이렉션은 useAuthRedirect 훅이 처리
-    // 여기서는 일단 /dashboard로 리다이렉션 (추후 훅에서 역할에 따라 변경됨)
+    // 백엔드의 redirect 콜백이 역할에 따라 적절한 페이지로 리다이렉션하도록 함
+    // 즉, /admin/dashboard나 /dashboard 대신 / 사용
     signIn('google', { 
-      callbackUrl: '/dashboard' 
+      callbackUrl: '/' 
     });
   };
 
   const handleGithubSignIn = async () => {
     console.log('깃허브 로그인 시도...');
-    // 역할 기반 리다이렉션은 useAuthRedirect 훅이 처리
+    // 백엔드의 redirect 콜백이 역할에 따라 적절한 페이지로 리다이렉션하도록 함
     signIn('github', { 
-      callbackUrl: '/dashboard' 
+      callbackUrl: '/' 
     });
   };
 
@@ -69,6 +69,16 @@ const LoginForm = () => {
             onChange={handleChange}
             className="w-full border-b border-stroke bg-transparent pb-3.5 focus:border-waterloo focus:placeholder:text-black focus-visible:outline-none dark:border-strokedark dark:focus:border-manatee dark:focus:placeholder:text-white"
           />
+        </div>
+        
+        {/* 테스트 계정 안내 */}
+        <div className="mb-4 rounded-md bg-blue-50 p-3 text-sm text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+          <p className="font-medium">테스트용 계정:</p>
+          <ul className="mt-1 ml-4 list-disc">
+            <li>관리자: admin / admin1234</li>
+            <li>구독자: subscriber1 / sub1234</li>
+            <li>일반사용자: user1 / user1234</li>
+          </ul>
         </div>
         
         <div className="mb-6 flex justify-end text-sm">

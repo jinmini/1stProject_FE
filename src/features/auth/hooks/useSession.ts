@@ -25,17 +25,15 @@ export const useAuthSession = () => {
         accessToken: session.accessToken ? '존재함' : '없음'
       });
       
-      // delay를 줘서 확실히 상태가 설정되도록 함
-      setTimeout(() => {
-        setAuth({
-          userId: session.user.email || '',
-          name: session.user.name || '',
-          email: session.user.email || '',
-          role: session.user.role || 'user',
-          accessToken: session.accessToken || ''
-        });
-        console.log('useAuthSession - 세션 인증됨: 사용자 정보가 스토어에 저장되었습니다.');
-      }, 100);
+      // setTimeout 제거하여 지연 없이 바로 상태 업데이트
+      setAuth({
+        userId: session.user.email || '',
+        name: session.user.name || '',
+        email: session.user.email || '',
+        role: session.user.role || 'user',
+        accessToken: session.accessToken || ''
+      });
+      console.log('useAuthSession - 세션 인증됨: 사용자 정보가 스토어에 저장되었습니다.');
     } 
     // 세션이 인증되지 않았다면 스토어 초기화
     else if (status === 'unauthenticated') {
