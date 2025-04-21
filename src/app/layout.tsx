@@ -4,6 +4,7 @@ import "@/app/globals.css";
 import ClientLayout from "@/components/Common/ClientLayout";
 import NextAuthSessionProvider from "@/components/Providers/SessionProvier";
 import ToastProvider from "@/components/Providers/ToastProvider";
+import AuthSessionProvider from "@/components/Providers/AuthSessionProvider";
 const inter = Inter({ subsets: ["latin"],display: 'swap'});
 
 export const metadata: Metadata = {
@@ -21,12 +22,14 @@ export default function RootLayout({
 }) {
   return (
     <NextAuthSessionProvider>
-    <html lang="ko" suppressHydrationWarning>
-      <body className={`dark:bg-black ${inter.className}`}>
-        <ClientLayout>{children}</ClientLayout>
-        <ToastProvider />
-      </body>
-    </html>
+      <AuthSessionProvider>
+        <html lang="ko" suppressHydrationWarning>
+          <body className={`dark:bg-black ${inter.className}`}>
+            <ClientLayout>{children}</ClientLayout>
+            <ToastProvider />
+          </body>
+        </html>
+      </AuthSessionProvider>
     </NextAuthSessionProvider>
   );
 }

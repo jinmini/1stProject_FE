@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useAuthStore, getUser, getIsAuthenticated } from "@/store/auth/authSlice";
+import { useAuthStore } from "@/store/authStore";
 
 import ThemeToggler from "@/components/Header/ThemeToggler";
 import menuData from "@/components/Header/menuData";
@@ -17,10 +17,9 @@ const Header = () => {
   const pathUrl = usePathname();
   const router = useRouter();
   
-  // useAuth 대신 useAuthStore 사용
-  const user = useAuthStore(getUser);
-  const isAuthenticated = useAuthStore(getIsAuthenticated);
-  const signout = useAuthStore(state => state.signout);
+  // useAuthStore 사용
+  const { userId, name, email, accessToken, resetAuth, signout } = useAuthStore();
+  const isAuthenticated = !!userId && !!accessToken;
 
   // Sticky menu
   const handleStickyMenu = () => {
@@ -163,7 +162,7 @@ const Header = () => {
           <div className="mt-7 flex items-center gap-6 xl:mt-0">
             <ThemeToggler />
 
-            {isAuthenticated && user ? (
+            {isAuthenticated ? (
               <div className="relative">
                 <button 
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -183,7 +182,7 @@ const Header = () => {
                       d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" 
                     />
                   </svg>
-                  <span>{user.name}</span>
+                  <span>{name}</span>
                 </button>
                 
                 {userMenuOpen && (
@@ -207,7 +206,7 @@ const Header = () => {
             ) : (
               <Link
                 href="/auth/login"
-                className="text-regular font-medium text-waterloo hover:text-primary"
+                className="rounded-md bg-primary px-7.5 py-2.5 text-regular text-white duration-300 ease-in-out hover:bg-primaryho"
               >
                 로그인
               </Link>

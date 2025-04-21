@@ -2,12 +2,26 @@
 import Image from "next/image";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
 
 const Hero = () => {
   const [email, setEmail] = useState("");
+  const router = useRouter();
+  const { userId, accessToken } = useAuthStore();
+  const isAuthenticated = !!userId && !!accessToken;
 
   const handleSubmit = (e) => {
     e.preventDefault();
+  };
+
+  const handleDashboardClick = (e) => {
+    e.preventDefault();
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    } else {
+      router.push('/auth/login');
+    }
   };
 
   return (
@@ -25,12 +39,35 @@ const Hero = () => {
                   LIF
                 </span>
               </h1>
-              <p>
+              <p className="mb-6">
                 Life, Intelligence, Future - 혁신적인 금융 서비스 플랫폼으로 
                 더 나은 금융 생활을 경험하세요. 쉽고 편리한 금융 서비스를 통해 
                 당신의 미래를 설계하세요.
               </p>
-
+              
+              <div className="mt-10">
+                <a
+                  href="#"
+                  onClick={handleDashboardClick}
+                  className="inline-flex items-center justify-center rounded-md bg-primary px-8 py-3.5 text-base font-medium text-white duration-300 ease-in-out hover:bg-primary/90"
+                >
+                  {isAuthenticated ? "대시보드 이동하기" : "로그인하고 시작하기"}
+                  <svg
+                    className="ml-2 h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M14 5l7 7m0 0l-7 7m7-7H3"
+                    ></path>
+                  </svg>
+                </a>
+              </div>
             </div>
 
             <div className="animate_right hidden md:w-1/2 lg:block">

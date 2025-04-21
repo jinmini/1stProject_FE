@@ -1,9 +1,22 @@
 'use client';
+import axios from 'axios';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { devtools, subscribeWithSelector } from 'zustand/middleware';
-import api from '@/lib/api/axios';
+
+// axios 인스턴스 생성 및 내보내기
+export const axiosInstance = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
+// 기존 코드에서는 이 인스턴스를 사용하도록 수정
+const api = axiosInstance;
+export default api;
 
 interface UserState {
   user_id: string;

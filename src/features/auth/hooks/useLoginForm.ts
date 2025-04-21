@@ -1,7 +1,6 @@
 import { useState, FormEvent, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { setAccessToken } from '@/lib/api/authToken';
-import { useAuthStore } from '@/store/auth/authSlice';
+import { useAuthStore } from '@/store/authStore';
 
 // Mock API 구현 (실제 서버 API 없이 테스트용)
 const mockApi = {
@@ -12,6 +11,9 @@ const mockApi = {
     if (url === '/auth/login') {
       // 간단한 검증 (테스트용)
       if (data.email && data.password) {
+        // 특정 이메일을 admin으로 처리 (테스트용)
+        const isAdmin = data.email.includes('admin');
+        
         // 성공 응답 시뮬레이션
         return {
           data: {
@@ -19,7 +21,8 @@ const mockApi = {
             message: '로그인 성공',
             token: 'mock-jwt-token-' + Date.now(),
             refresh_token: 'mock-refresh-token',
-            user_id: data.email
+            user_id: data.email,
+            role: isAdmin ? 'admin' : 'user' // 관리자 또는 일반 사용자 역할 지정
           }
         };
       } else {
@@ -40,18 +43,8 @@ interface LoginFormState {
   isLoading: boolean;
 }
 
-// 유저 스토어 모킹 (실제 스토어가 없는 경우를 위한 임시 구현)
-const mockUserStore = {
-  setUserId: (id: string) => console.log('Mock setUserId:', id),
-  updateEmail: (email: string) => console.log('Mock updateEmail:', email),
-  updateName: (name: string) => console.log('Mock updateName:', name)
-};
-
 export const useLoginForm = () => { 
   const router = useRouter();
-  
-  // 실제 useUserStore 대신 Mock 사용
-  const { setUserId, updateEmail, updateName } = mockUserStore;
   const signin = useAuthStore(state => state.signin);
   
   const [formState, setFormState] = useState<LoginFormState>({ 
@@ -97,26 +90,18 @@ export const useLoginForm = () => {
         token?: string;
         refresh_token?: string;
         user_id?: string;
+        role?: 'user' | 'subscriber' | 'admin';
       };
       
       if (responseData.success) {
         const userId = responseData.user_id || formState.id;
+        const userRole = responseData.role || 'user';
         
-        // 액세스 토큰 저장
-        if (responseData.token) {
-          setAccessToken(responseData.token);
-          console.log('Access token이 저장되었습니다.');
-        }
-        
-        // Mock 유저 스토어 업데이트
-        setUserId(userId);
-        updateEmail(formState.id);
-        updateName('사용자');
-
         // AuthStore로 로그인 처리
         await signin(userId, {
           name: '사용자',
-          email: formState.id
+          email: formState.id,
+          role: userRole // 역할 추가
         }, responseData.token);
 
         // 성공 메시지 설정
@@ -126,8 +111,14 @@ export const useLoginForm = () => {
           isLoading: false
         }));
 
-        // 대시보드로 이동
-        router.push('/dashboard');
+        // 역할에 따라 적절한 대시보드로 리다이렉션
+        if (userRole === 'admin') {
+          console.log('관리자로 로그인: 관리자 대시보드로 이동');
+          router.push('/admin/dashboard');
+        } else {
+          console.log('일반 사용자로 로그인: 대시보드로 이동');
+          router.push('/dashboard');
+        }
       } else {
         throw new Error(responseData.message || '로그인에 실패했습니다.');
       }

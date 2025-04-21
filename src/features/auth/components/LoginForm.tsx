@@ -4,13 +4,32 @@ import React from 'react';
 import Link from 'next/link';
 import { useLoginForm } from '@/features/auth/hooks/useLoginForm';
 import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 const LoginForm = () => {
+  const router = useRouter();
   const {
     formState,
     handleChange,
     handleLogin
   } = useLoginForm();
+
+  const handleGoogleSignIn = async () => {
+    console.log('구글 로그인 시도...');
+    // 역할 기반 리다이렉션은 useAuthRedirect 훅이 처리
+    // 여기서는 일단 /dashboard로 리다이렉션 (추후 훅에서 역할에 따라 변경됨)
+    signIn('google', { 
+      callbackUrl: '/dashboard' 
+    });
+  };
+
+  const handleGithubSignIn = async () => {
+    console.log('깃허브 로그인 시도...');
+    // 역할 기반 리다이렉션은 useAuthRedirect 훅이 처리
+    signIn('github', { 
+      callbackUrl: '/dashboard' 
+    });
+  };
 
   return (
     <>
@@ -86,7 +105,7 @@ const LoginForm = () => {
               aria-label="login with google"
               className="flex h-11 w-11 items-center justify-center rounded-md border border-stroke bg-white text-black transition-all duration-300 hover:border-primary hover:bg-primary/5 hover:text-primary dark:border-strokedark dark:bg-black dark:text-white dark:hover:border-primary"
               type="button"
-              onClick={() => signIn('google')}
+              onClick={handleGoogleSignIn}
             >
               <svg
                 width="20"
@@ -125,7 +144,7 @@ const LoginForm = () => {
               aria-label="login with github"
               className="flex h-11 w-11 items-center justify-center rounded-md border border-stroke bg-white text-black transition-all duration-300 hover:border-primary hover:bg-primary/5 hover:text-primary dark:border-strokedark dark:bg-black dark:text-white dark:hover:border-primary"
               type="button"
-              onClick={() => signIn('github')}
+              onClick={handleGithubSignIn}
             >
               <svg
                 fill="currentColor"
