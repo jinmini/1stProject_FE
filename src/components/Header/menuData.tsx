@@ -38,9 +38,9 @@ const menuData: Menu[] = [
       },
       {
         id: 34,
-        title: "Sign In",
+        title: "Login",
         newTab: false,
-        path: "/signin",
+        path: "/login",
       },
       {
         id: 35,

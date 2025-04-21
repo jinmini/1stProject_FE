@@ -1,6 +1,5 @@
 import { Metadata } from "next";
-import Hero from "@/components/Hreo";
-// import Features from "@/components/Features";
+import Hero from "@/components/Hero";
 
 export const metadata: Metadata = {
   title: "LIF - Life, Intelligence, Future",
