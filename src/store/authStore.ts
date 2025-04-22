@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { setAccessToken, removeAccessToken } from '@/lib/api/authToken';
+import { useRouter } from 'next/navigation';
 
 interface AuthState {
   userId: string;
@@ -11,6 +12,7 @@ interface AuthState {
   resetAuth: () => void;
   signin: (userId: string, userInfo: { name?: string; email?: string; role?: 'user' | 'subscriber' | 'admin' }, token?: string) => Promise<void>;
   signout: () => void;
+  handleAuthFailure: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -56,5 +58,27 @@ export const useAuthStore = create<AuthState>((set) => ({
     // 상태 초기화
     set({ userId: '', name: '', email: '', role: 'user', accessToken: '' });
     console.log('Auth 스토어: 로그아웃 완료');
+  },
+
+  // 인증 실패 처리 (토큰 갱신 실패 등)
+  handleAuthFailure: () => {
+    // 토큰 제거 및 상태 초기화 (로그아웃)
+    removeAccessToken();
+    set({ userId: '', name: '', email: '', role: 'user', accessToken: '' });
+    
+    console.log('Auth 스토어: 인증 실패로 로그아웃 처리');
+    
+    // Client-side 리다이렉트 (CSR)
+    if (typeof window !== 'undefined') {
+      // 현재 URL 저장 (로그인 후 돌아오기 위해)
+      const returnUrl = encodeURIComponent(window.location.pathname);
+      window.location.href = `/auth/login?returnUrl=${returnUrl}`;
+    }
   }
 }));
+
+// 초기화 함수 - 앱 시작 시 호출
+export const initializeAuth = () => {
+  console.log('Auth 초기화 완료');
+  // useAuthStore로 접근하는 로직은 필요 없어 단순히 로그만 출력
+};

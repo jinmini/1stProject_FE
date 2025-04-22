@@ -22,23 +22,28 @@ import {
   SelectChangeEvent,
   Box,
 } from '@mui/material';
+import { GrowthData } from '../../hooks/useDashboardData';
 
-const data = [
-  { year: '2022', salesGrowth: 1331.72, profitGrowth: 986.07, epsGrowth: 650.20 },
-  { year: '2023', salesGrowth: 32.04, profitGrowth: 78.20, epsGrowth: 59.96 },
-  { year: '2024', salesGrowth: 75.92, profitGrowth: -160.86, epsGrowth: -79.28 },
-];
+interface GrowthChartProps {
+  data: GrowthData;
+}
 
 // 지표 정보
 const metrics = [
-  { key: 'salesGrowth', name: '매출 성장률', color: '#6366F1' },
-  { key: 'profitGrowth', name: '영업이익 성장률', color: '#10B981' },
-  { key: 'epsGrowth', name: 'EPS 성장률', color: '#F59E0B' },
+  { key: 'revenueGrowth', name: '매출 성장률', color: '#6366F1' },
+  { key: 'netIncomeGrowth', name: '순이익 성장률', color: '#10B981' },
 ];
 
-const GrowthChart = () => {
+const GrowthChart: React.FC<GrowthChartProps> = ({ data }) => {
   // 선택된 지표들을 관리하는 상태 - 매출 성장률만 기본 선택
-  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(['salesGrowth']);
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>(['revenueGrowth']);
+
+  // 데이터 가공
+  const chartData = data.years.map((year, index) => ({
+    year,
+    revenueGrowth: data.revenueGrowth[index],
+    netIncomeGrowth: data.netIncomeGrowth[index],
+  }));
 
   // 드롭다운 변경 핸들러
   const handleChange = (event: SelectChangeEvent<typeof selectedMetrics>) => {
@@ -88,14 +93,12 @@ const GrowthChart = () => {
 
       <div className="h-[300px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+          <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="year" tick={{ fontSize: 12 }} />
             <YAxis 
               tick={{ fontSize: 12 }} 
-              domain={[Math.min(-200, (Math.floor(Math.min(...data.flatMap(item => 
-                selectedMetrics.map(metric => item[metric as keyof typeof item] as number)
-              )) / 100) * 100) - 50), 'auto']} 
+              domain={['auto', 'auto']} 
               tickFormatter={(value) => `${value}%`}
             />
             <Tooltip 
@@ -128,8 +131,7 @@ const GrowthChart = () => {
         <h6 className="mb-2 text-sm font-medium text-black dark:text-white">지표 설명</h6>
         <ul className="text-xs text-waterloo dark:text-manatee">
           <li>매출 성장률: (당해 매출액 - 전년 매출액) ÷ 전년 매출액 × 100</li>
-          <li>영업이익 성장률: (당해 영업이익 - 전년 영업이익) ÷ 전년 영업이익 × 100</li>
-          <li>EPS 성장률: (당해 주당순이익 - 전년 주당순이익) ÷ 전년 주당순이익 × 100</li>
+          <li>순이익 성장률: (당해 순이익 - 전년 순이익) ÷ 전년 순이익 × 100</li>
         </ul>
       </Box>
     </div>

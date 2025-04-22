@@ -22,12 +22,11 @@ import {
   SelectChangeEvent,
   Box,
 } from '@mui/material';
+import { DebtLiquidityData } from '../../hooks/useDashboardData';
 
-const data = [
-  { year: '2022', debtRatio: 97.93, currentRatio: 150.0 },
-  { year: '2023', debtRatio: 66.23, currentRatio: 127.15 },
-  { year: '2024', debtRatio: 94.75, currentRatio: 127.15 },
-];
+interface DebtLiquidityChartProps {
+  data: DebtLiquidityData;
+}
 
 // 지표 정보
 const metrics = [
@@ -35,9 +34,16 @@ const metrics = [
   { key: 'currentRatio', name: '유동비율', color: '#60A5FA' },
 ];
 
-const DebtLiquidityChart = () => {
+const DebtLiquidityChart: React.FC<DebtLiquidityChartProps> = ({ data }) => {
   // 선택된 지표들을 관리하는 상태 - 유동비율만 기본 선택
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(['currentRatio']);
+
+  // 데이터 가공
+  const chartData = data.years.map((year, index) => ({
+    year,
+    debtRatio: data.debtRatio[index],
+    currentRatio: data.currentRatio[index],
+  }));
 
   // 드롭다운 변경 핸들러
   const handleChange = (event: SelectChangeEvent<typeof selectedMetrics>) => {
@@ -87,7 +93,7 @@ const DebtLiquidityChart = () => {
 
       <div className="h-[300px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+          <LineChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="year" tick={{ fontSize: 12 }} />
             <YAxis 

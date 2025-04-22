@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { initializeAuth } from "@/store/auth/authSlice";
+import { initializeAuth } from "@/store/authStore";
 import ScrollToTop from "@/components/ScrollToTOp";
 import { ThemeProvider } from "next-themes";
 import Lines from "@/components/Lines";

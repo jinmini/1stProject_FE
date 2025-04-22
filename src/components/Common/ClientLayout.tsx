@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import Lines from "@/components/Lines";
 import ScrollToTop from "@/components/ScrollToTOp";
 import { ThemeProvider } from "next-themes";
-import { initializeAuth } from "@/store/auth/authSlice";
+import { initializeAuth } from "@/store/authStore";
 
 export default function ClientLayout({
   children,

@@ -3,17 +3,12 @@
 import React from 'react';
 import { Card, CardContent, Typography, Box, Grid } from '@mui/material';
 import { ArrowUpward, ArrowDownward, Remove } from '@mui/icons-material';
+import { Grade } from '../../hooks/useDashboardData';
 
-// 연도별 등급 데이터를 위한 인터페이스
-interface YearlyGrade {
-  year: number;
-  grade: string;
-}
-
-// 컴포넌트 props 인터페이스 업데이트
+// 컴포넌트 props 인터페이스
 interface EsgGradeCardProps {
   title: string;
-  grades: YearlyGrade[];
+  grades: Grade[];
 }
 
 // 등급에 따른 배경색 결정 함수

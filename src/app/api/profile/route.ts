@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/features/auth/lib/authOptions';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 // 모의 데이터를 위한 사용자 프로필 저장소
 let profilesStore: Record<string, any> = {};

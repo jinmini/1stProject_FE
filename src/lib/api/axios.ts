@@ -1,189 +1,133 @@
 'use client';
 import axios from 'axios';
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
-import { devtools, subscribeWithSelector } from 'zustand/middleware';
+import { getSession } from 'next-auth/react';
+import { getAccessToken, isTokenExpired } from './authToken';
+import { authService } from '@/services/authService';
 
-// axios 인스턴스 생성 및 내보내기
+// axios 타입 직접 정의
+interface AxiosRequestConfig {
+  headers?: Record<string, string>;
+  data?: any;
+  [key: string]: any;
+}
+
+interface AxiosResponse<T = any> {
+  data: T;
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  config: AxiosRequestConfig;
+}
+
+// 토큰 갱신 중인지 추적하는 변수
+let isRefreshing = false;
+// 토큰 갱신 대기 중인 요청들
+let failedQueue: Array<{
+  resolve: (value: unknown) => void;
+  reject: (reason?: any) => void;
+  config: any;
+}> = [];
+
+// 대기 중인 요청들 처리
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(promise => {
+    if (error) {
+      promise.reject(error);
+    } else if (token) {
+      // 새 토큰으로 헤더 업데이트
+      promise.config.headers['Authorization'] = `Bearer ${token}`;
+      promise.resolve(axios(promise.config));
+    }
+  });
+  
+  // 큐 초기화
+  failedQueue = [];
+};
+
+// API 기본 URL 설정
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+
+// Axios 인스턴스 생성
 export const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
-  timeout: 10000,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-  }
+  },
+  timeout: 10000, // 10초
 });
 
-// 기존 코드에서는 이 인스턴스를 사용하도록 수정
-const api = axiosInstance;
-export default api;
-
-interface UserState {
-  user_id: string;
-  name: string;
-  email: string;
-  isLoading: boolean;
-  error: string | null;
-}
-
-
-export type UserActions = {
-  
-  setUserId: (user_id: UserState['user_id']) => void;
-  setLoading: (isLoading: boolean) => void;
-  setError: (error: string | null) => void;
-  reset: () => void;
-  
-  
-  updateName: (name: string) => Promise<void>;
-  updateEmail: (email: string) => Promise<void>;
-  fetchUserData: () => Promise<void>;
-}
-
-
-export type UserStore = UserState & UserActions;
-
-
-export const getUserId = (state: UserStore) => state.user_id;
-export const getUserName = (state: UserStore) => state.name;
-export const getUserEmail = (state: UserStore) => state.email;
-export const getIsLoading = (state: UserStore) => state.isLoading;
-export const getError = (state: UserStore) => state.error;
-
-
-export const useUserStore = create<UserStore>()(
-  subscribeWithSelector( 
-    persist(
-      immer(
-        devtools(
-          (set, get) => ({
-            
-            user_id: '', 
-            name: '',
-            email: '',
-            isLoading: false,
-            error: null,
-            
-           
-            setUserId: (user_id) => set((state) => {
-              state.user_id = user_id;
-            }),
-            
-            setLoading: (isLoading) => set((state) => {
-              state.isLoading = isLoading;
-            }),
-            
-            setError: (error) => set((state) => {
-              state.error = error;
-            }),
-            
-            reset: () => set({ 
-              user_id: '', 
-              name: '', 
-              email: '', 
-              isLoading: false, 
-              error: null 
-            }),
-            
-            
-            updateName: async (name) => {
-              try {
-                set((state) => { state.isLoading = true; state.error = null; });
-                
-                
-                if (get().user_id) {
-                  await api.put(`/users/${get().user_id}`, { name });
-                }
-                
-              
-                set((state) => { 
-                  state.name = name;
-                  state.isLoading = false;
-                });
-              } catch (error) {
-                set((state) => { 
-                  state.error = error instanceof Error ? error.message : '이름 업데이트 중 오류가 발생했습니다';
-                  state.isLoading = false;
-                });
-                console.error('이름 업데이트 오류:', error);
-              }
-            },
-            
-            updateEmail: async (email) => {
-              try {
-                set((state) => { state.isLoading = true; state.error = null; });
-                
-              
-                if (get().user_id) {
-                  await api.put(`/users/${get().user_id}`, { email });
-                }
-                
-               
-                set((state) => { 
-                  state.email = email;
-                  state.isLoading = false;
-                });
-              } catch (error) {
-                set((state) => { 
-                  state.error = error instanceof Error ? error.message : '이메일 업데이트 중 오류가 발생했습니다';
-                  state.isLoading = false;
-                });
-                console.error('이메일 업데이트 오류:', error);
-              }
-            },
-            
-            fetchUserData: async () => {
-              try {
-                const userId = get().user_id;
-                if (!userId) return;
-                
-                set((state) => { state.isLoading = true; state.error = null; });
-                
-               
-                const response = await api.get(`/users/${userId}`);
-                const userData = response.data as { name: string; email: string };
-                
-               
-                set((state) => { 
-                  state.name = userData.name; 
-                  state.email = userData.email;
-                  state.isLoading = false;
-                });
-              } catch (error) {
-                set((state) => { 
-                  state.error = error instanceof Error ? error.message : '사용자 데이터 로드 중 오류가 발생했습니다';
-                  state.isLoading = false;
-                });
-                console.error('사용자 데이터 로드 오류:', error);
-              }
-            },
-          })
-        )
-      ),
-      {
-        name: 'setUserInfo', 
-        storage: createJSONStorage(() => localStorage),
-      
-        partialize: (state) => ({
-          user_id: state.user_id,
-          name: state.name,
-          email: state.email,
-        }),
-      }
-    )
-  )
-);
-
-
-useUserStore.subscribe(
-  getUserId, 
-  (userId) => {
-    if (userId) {
-      
-      console.log('사용자 로그인됨:', userId);
-    } else {
-      
-      console.log('사용자 로그아웃됨');
+// 요청 인터셉터 설정 (인증 토큰 첨부)
+axiosInstance.interceptors.request.use(
+  async (config) => {
+    const session = await getSession();
+    
+    // 인증 토큰이 있는 경우 요청 헤더에 추가
+    if (session?.accessToken && config.headers) {
+      config.headers['Authorization'] = `Bearer ${session.accessToken}`;
     }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
 );
+
+// 응답 인터셉터 설정 (에러 핸들링)
+axiosInstance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    // 401 에러(인증 실패)이고 재시도하지 않은 경우 토큰 갱신 시도
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // 토큰 갱신 로직을 여기에 구현
+        // const refreshResult = await refreshToken();
+        // if (refreshResult) {
+        //   originalRequest.headers['Authorization'] = `Bearer ${refreshResult.accessToken}`;
+        //   return axiosInstance(originalRequest);
+        // }
+      } catch (refreshError) {
+        console.error('토큰 갱신 실패:', refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+// API 요청 함수 타입
+export type ApiRequest = <T>(
+  url: string,
+  options?: AxiosRequestConfig
+) => Promise<T>;
+
+// API 요청 함수들
+export const apiGet = async <T>(url: string, options: AxiosRequestConfig = {}): Promise<T> => {
+  const response: AxiosResponse<T> = await axiosInstance.get(url, options);
+  return response.data;
+};
+
+export const apiPost = async <T>(url: string, options: AxiosRequestConfig = {}): Promise<T> => {
+  const response: AxiosResponse<T> = await axiosInstance.post(url, options?.data, options);
+  return response.data;
+};
+
+export const apiPut = async <T>(url: string, options: AxiosRequestConfig = {}): Promise<T> => {
+  const response: AxiosResponse<T> = await axiosInstance.put(url, options?.data, options);
+  return response.data;
+};
+
+export const apiDelete = async <T>(url: string, options: AxiosRequestConfig = {}): Promise<T> => {
+  const response: AxiosResponse<T> = await axiosInstance.delete(url, options);
+  return response.data;
+};
+
+// 기본 인스턴스 내보내기
+const api = axiosInstance;
+export default api;
