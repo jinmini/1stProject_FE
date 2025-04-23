@@ -74,10 +74,11 @@ interface UseCompanySearchReturn {
 }
 
 export const useCompanySearch = ({ onSearch }: UseCompanySearchProps = {}): UseCompanySearchReturn => {
-  // Zustand 스토어 사용
-  const { currentCompany, setCurrentCompany } = useCompanyStore();
+  // Zustand 스토어 사용 (상태 설정만 사용하고 읽기는 사용하지 않음)
+  const { setCurrentCompany } = useCompanyStore();
   
-  const [searchText, setSearchText] = useState<string>(currentCompany || '');
+  // 로컬 상태만 관리 - store와 로컬 상태를 동기화하지 않음
+  const [searchText, setSearchText] = useState<string>('');
   const [recentSearches, setRecentSearches] = useState<string[]>([
     '삼성전자',
     'LG화학',
@@ -143,7 +144,7 @@ export const useCompanySearch = ({ onSearch }: UseCompanySearchProps = {}): UseC
   const handleSearch = () => {
     if (searchText.trim() === '') return;
     
-    // Zustand 스토어 업데이트
+    // Zustand 스토어 업데이트 (단방향: 로컬 -> 스토어)
     setCurrentCompany(searchText);
     
     // Props 콜백도 유지 (옵션)
@@ -210,7 +211,7 @@ export const useCompanySearch = ({ onSearch }: UseCompanySearchProps = {}): UseC
   const selectSuggestion = (company: string) => {
     setSearchText(company);
     
-    // Zustand 스토어 업데이트
+    // Zustand 스토어 업데이트 (단방향: 로컬 -> 스토어)
     setCurrentCompany(company);
     
     // Props 콜백도 유지 (옵션)
@@ -229,7 +230,7 @@ export const useCompanySearch = ({ onSearch }: UseCompanySearchProps = {}): UseC
   const selectRecentSearch = (company: string) => {
     setSearchText(company);
     
-    // Zustand 스토어 업데이트
+    // Zustand 스토어 업데이트 (단방향: 로컬 -> 스토어)
     setCurrentCompany(company);
     
     // Props 콜백도 유지 (옵션)
@@ -237,13 +238,6 @@ export const useCompanySearch = ({ onSearch }: UseCompanySearchProps = {}): UseC
       onSearch(company);
     }
   };
-
-  // currentCompany가 변경되면 searchText도 업데이트
-  useEffect(() => {
-    if (currentCompany && currentCompany !== searchText) {
-      setSearchText(currentCompany);
-    }
-  }, [currentCompany, searchText]);
 
   // 검색어 변경 시 자동 완성 업데이트
   useEffect(() => {
