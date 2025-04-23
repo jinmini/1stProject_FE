@@ -38,12 +38,12 @@ const DebtLiquidityChart: React.FC<DebtLiquidityChartProps> = ({ data }) => {
   // 선택된 지표들을 관리하는 상태 - 유동비율만 기본 선택
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(['currentRatio']);
 
-  // 데이터 가공
-  const chartData = data.years.map((year, index) => ({
+  // 데이터 가공 - 방어적 코드 추가
+  const chartData = data && data.years ? data.years.map((year, index) => ({
     year,
-    debtRatio: data.debtRatio[index],
-    currentRatio: data.currentRatio[index],
-  }));
+    debtRatio: data.debtRatio?.[index] ?? 0,
+    currentRatio: data.currentRatio?.[index] ?? 0,
+  })) : [];
 
   // 드롭다운 변경 핸들러
   const handleChange = (event: SelectChangeEvent<typeof selectedMetrics>) => {

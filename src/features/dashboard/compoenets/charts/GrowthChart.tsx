@@ -38,12 +38,12 @@ const GrowthChart: React.FC<GrowthChartProps> = ({ data }) => {
   // 선택된 지표들을 관리하는 상태 - 매출 성장률만 기본 선택
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(['revenueGrowth']);
 
-  // 데이터 가공
-  const chartData = data.years.map((year, index) => ({
+  // 데이터 가공 - 방어적 코드 추가
+  const chartData = data && data.years ? data.years.map((year, index) => ({
     year,
-    revenueGrowth: data.revenueGrowth[index],
-    netIncomeGrowth: data.netIncomeGrowth[index],
-  }));
+    revenueGrowth: data.revenueGrowth?.[index] ?? 0,
+    netIncomeGrowth: data.netIncomeGrowth?.[index] ?? 0,
+  })) : [];
 
   // 드롭다운 변경 핸들러
   const handleChange = (event: SelectChangeEvent<typeof selectedMetrics>) => {

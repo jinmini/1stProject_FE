@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Search, AlertCircle } from 'lucide-react';
 import { CircularProgress, Alert } from '@mui/material';
 import { useCompanySearch } from '../../hooks/useCompanySearch';
+import { useCompanyStore } from '../../store/companyStore';
 
 interface SearchCompanyBoxProps {
   onSearch?: (company: string) => void;
@@ -57,6 +58,8 @@ const HANGUL_INITIAL_CONSONANTS = {
 };
 
 const SearchCompanyBox: React.FC<SearchCompanyBoxProps> = ({ onSearch }) => {
+  // 외부 상태와 훅 분리
+  const { currentCompany } = useCompanyStore();
   const {
     searchText,
     setSearchText,
@@ -73,6 +76,13 @@ const SearchCompanyBox: React.FC<SearchCompanyBoxProps> = ({ onSearch }) => {
     companyListLoading,
     companyListError
   } = useCompanySearch({ onSearch });
+
+  // 컴포넌트 마운트 시 한 번만 현재 선택된 회사명 설정
+  useEffect(() => {
+    if (currentCompany && !searchText) {
+      setSearchText(currentCompany);
+    }
+  }, []);
 
   return (
     <div className="p-4 mb-6 border border-stroke rounded-lg bg-white shadow-default dark:border-strokedark dark:bg-blacksection">
@@ -108,6 +118,8 @@ const SearchCompanyBox: React.FC<SearchCompanyBoxProps> = ({ onSearch }) => {
               className="absolute right-4 top-1/2 -translate-y-1/2 text-waterloo hover:text-primary dark:text-manatee dark:hover:text-white"
               onClick={handleSearch}
               disabled={companyListLoading}
+              aria-label="검색"
+              type="button"
             >
               {companyListLoading ? (
                 <CircularProgress size={18} />
@@ -135,6 +147,16 @@ const SearchCompanyBox: React.FC<SearchCompanyBoxProps> = ({ onSearch }) => {
               </div>
             )}
           </div>
+          
+          {/* 검색 버튼 추가 */}
+          <button
+            className="px-4 py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-150"
+            onClick={handleSearch}
+            disabled={companyListLoading || !searchText.trim()}
+            type="button"
+          >
+            검색
+          </button>
         </div>
         
         {recentSearches.length > 0 && (

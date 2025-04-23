@@ -1,8 +1,53 @@
 "use client";
 
 import React from 'react';
+import { useDashboardData } from '../../hooks/useDashboardData';
+import { useCompanyStore } from '../../store/companyStore';
+import { CircularProgress, Alert } from '@mui/material';
 
 const EsgTab = () => {
+  // 필요한 데이터 가져오기
+  const { currentCompany } = useCompanyStore();
+  const { data, loading, error } = useDashboardData();
+  
+  // 로딩 상태 처리
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[200px]">
+        <CircularProgress />
+      </div>
+    );
+  }
+
+  // 에러 상태 처리
+  if (error) {
+    return (
+      <Alert severity="error" className="mb-4">
+        {error}
+      </Alert>
+    );
+  }
+
+  // 선택된 회사가 없거나 데이터가 없는 경우
+  if (!currentCompany || !data) {
+    return (
+      <div className="p-4 mb-4 text-center bg-gray-100 dark:bg-gray-800 rounded-lg">
+        <p className="text-waterloo dark:text-manatee">
+          기업을 검색하여 분석 결과를 확인하세요.
+        </p>
+      </div>
+    );
+  }
+  
+  // ESG 데이터가 없는 경우
+  if (!data.esgGrades) {
+    return (
+      <Alert severity="info" className="mb-4">
+        해당 기업의 ESG 데이터는 현재 제공되지 않습니다.
+      </Alert>
+    );
+  }
+
   return (
     <div className="mb-8 grid grid-cols-1 gap-4">
       <div className="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-blacksection">
@@ -33,6 +78,7 @@ const EsgTab = () => {
               </div>
             </div>
           </div>
+          
           <div className="rounded-sm border border-stroke bg-white p-4 dark:border-strokedark dark:bg-meta-4">
             <h5 className="mb-2 text-lg font-medium text-black dark:text-white">사회(S)</h5>
             <div className="mb-4 flex items-center">
@@ -56,6 +102,7 @@ const EsgTab = () => {
               </div>
             </div>
           </div>
+          
           <div className="rounded-sm border border-stroke bg-white p-4 dark:border-strokedark dark:bg-meta-4">
             <h5 className="mb-2 text-lg font-medium text-black dark:text-white">지배구조(G)</h5>
             <div className="mb-4 flex items-center">
