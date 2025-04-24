@@ -42,50 +42,24 @@ const SummaryTab = () => {
       </div>
     );
   }
-  
-  return (
-    <>
-      {/* 선택된 회사 정보 표시 */}
-      <div className="mb-4">
-        <h3 className="text-xl font-semibold text-black dark:text-white">
-          '{data.companyName}' 기업 분석 결과
-        </h3>
-      </div>
-    
-      {/* 대시보드 메트릭 섹션 - ESG 등급 카드 */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <EsgGradeCard 
-          title="종합 등급" 
-          grades={data.esgGrades.overall}
-        />
-        <EsgGradeCard 
-          title="환경(E)" 
-          grades={data.esgGrades.environmental}
-        />
-        <EsgGradeCard 
-          title="사회(S)" 
-          grades={data.esgGrades.social}
-        />
-        <EsgGradeCard 
-          title="지배구조(G)" 
-          grades={data.esgGrades.governance}
-        />
-      </div>
-      
-      {/* 성장성 지표 차트 */}
-      <div className="mb-8 grid grid-cols-1 gap-4">
-        <ProfitabilityChart data={data.financialMetrics} />
-      </div>
 
-      {/* 차트 섹션 */}
-      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <GrowthChart data={data.growthData} />
-        <DebtLiquidityChart data={data.debtLiquidityData} />
-      </div>
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-3 2xl:gap-7.5">
+      {/* 재무 지표 */}
+      {data.financialMetrics && data.financialMetrics.years && (
+        <ProfitabilityChart data={data.financialMetrics} />
+      )}
       
-      {/* 금융 및 ESG 데이터 분석 보고 */}
-      <DataAnalysisReport analysis={data.analysis} />
-    </>
+      {/* 성장성 지표 */}
+      {data.growthData && data.growthData.years && (
+        <GrowthChart data={data.growthData} />
+      )}
+      
+      {/* 부채 및 유동성 지표 */}
+      {data.debtLiquidityData && data.debtLiquidityData.years && (
+        <DebtLiquidityChart data={data.debtLiquidityData} />
+      )}
+    </div>
   );
 };
 

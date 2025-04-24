@@ -40,14 +40,14 @@ const ProfitabilityChart: React.FC<ProfitabilityChartProps> = ({ data }) => {
   // 선택된 지표들을 관리하는 상태 - ROE만 기본 선택
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(['roe']);
 
-  // 데이터 가공
-  const chartData = data.years.map((year, index) => ({
+  // 데이터 가공 - 방어적 코드 추가
+  const chartData = data && data.years ? data.years.map((year, index) => ({
     year,
-    operatingMargin: data.operatingMargin[index],
-    netMargin: data.netMargin[index],
-    roe: data.roe[index],
-    roa: data.roa[index]
-  }));
+    operatingMargin: data.operatingMargin?.[index] ?? 0,
+    netMargin: data.netMargin?.[index] ?? 0,
+    roe: data.roe?.[index] ?? 0,
+    roa: data.roa?.[index] ?? 0,
+  })) : [];
 
   // 드롭다운 변경 핸들러
   const handleChange = (event: SelectChangeEvent<typeof selectedMetrics>) => {

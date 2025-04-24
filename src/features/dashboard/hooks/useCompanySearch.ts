@@ -283,4 +283,4 @@ export const useCompanySearch = ({ onSearch }: UseCompanySearchProps = {}): UseC
     companyListLoading,
     companyListError
   };
-}; 
+};

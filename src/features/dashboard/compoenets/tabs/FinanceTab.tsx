@@ -47,8 +47,18 @@ const FinanceTab = () => {
     );
   }
 
-  // 데이터 추출
+  // 데이터 추출 - 방어적 코드 추가
   const { financialMetrics, growthData, debtLiquidityData } = data;
+  
+  // 필요한 데이터가 없는 경우 처리
+  if (!financialMetrics?.years || !growthData?.years || !debtLiquidityData?.years) {
+    return (
+      <Alert severity="warning" className="mb-4">
+        해당 기업의 재무 데이터를 가져올 수 없습니다.
+      </Alert>
+    );
+  }
+  
   const years = financialMetrics.years;
 
   return (

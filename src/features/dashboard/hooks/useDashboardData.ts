@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useCompanyStore } from '../store/companyStore';
-import * as dashboardService from '@/services/dashboardService';
+import { getCompanyData } from '@/services/dashboardService';
 
 // 데이터 타입 정의
 export interface Grade {
@@ -37,11 +37,12 @@ export interface DebtLiquidityData {
 
 export interface DashboardData {
   companyName: string;
-  esgGrades: ESGGrades;
   financialMetrics: FinancialMetrics;
   growthData: GrowthData;
   debtLiquidityData: DebtLiquidityData;
-  analysis: {
+  // 선택적 필드로 변경 - API 응답에 없을 수 있음
+  esgGrades?: ESGGrades;
+  analysis?: {
     summary: string;
     financialEsgIntegration: {
       riskAssessment: string;
@@ -189,18 +190,7 @@ export const useDashboardData = (): UseDashboardDataReturn => {
     setError(null);
 
     try {
-      // 개발 환경에서는 목업 데이터 사용, 프로덕션에서는 실제 API 호출
-      let result: DashboardData | null = null;
-      
-      if (isDevelopment) {
-        // 목업 데이터 사용 (딜레이 추가하여 로딩 상태 시뮬레이션)
-        await new Promise(resolve => setTimeout(resolve, 500));
-        result = mockDataMap[currentCompany] || null;
-      } else {
-        // 실제 API 호출
-        result = await dashboardService.getCompanyData(currentCompany);
-      }
-      
+      const result = await getCompanyData(currentCompany);
       setData(result);
     } catch (err) {
       console.error('Dashboard data fetch error:', err);
@@ -210,7 +200,6 @@ export const useDashboardData = (): UseDashboardDataReturn => {
     }
   };
 
-  // 회사가 변경되면 데이터 다시 불러오기
   useEffect(() => {
     fetchData();
   }, [currentCompany]);
